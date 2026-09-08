@@ -1,24 +1,29 @@
-# --- Stage 1: Install Dependencies ---
+# --- Stage 1: Dependencies ---
 FROM node:18-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
-# --- Stage 2: Build Application ---
+# --- Stage 2: Builder ---
 FROM node:18-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-ARG NEXT_PUBLIC_SUPABASE_URL
-ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+# Accept arguments with fallback empty defaults
+ARG NEXT_PUBLIC_SUPABASE_URL=""
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY=""
+
 ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
 ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
 
+# Pass dummy values if secrets are missing during build phase
+ENV NEXT_TELEMETRY_DISABLED=1
+
 RUN npm run build
 
-# --- Stage 3: Production Runner ---
+# --- Stage 3: Runner ---
 FROM node:18-alpine AS runner
 WORKDIR /app
 

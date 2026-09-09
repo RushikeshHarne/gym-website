@@ -45,7 +45,8 @@ jobs:
         run: |
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/ironforge-gym:${{ github.sha }}
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/ironforge-gym:latest
-  deploy-to-k8s:
+          
+  deploy-to-eks:
     needs: build-and-scan
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -53,16 +54,21 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
       - name: Set up kubectl
         uses: azure/setup-kubectl@v3
         with:
           version: 'latest'
 
-      - name: Set Kubernetes Context
-        uses: azure/k8s-set-context@v3
-        with:
-          method: kubeconfig
-          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+      - name: Update Kubeconfig for EKS
+        run: |
+          aws eks update-kubeconfig --name gym-eks-cluster --region us-east-1
 
       - name: Create or Update Supabase Secret in K8s
         run: |
@@ -71,8 +77,8 @@ jobs:
             --from-literal=NEXT_PUBLIC_SUPABASE_ANON_KEY="${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" \
             --dry-run=client -o yaml | kubectl apply -f -
 
-      - name: Deploy to Kubernetes Cluster
+      - name: Deploy to EKS Cluster
         run: |
-          kubectl apply -f gym-deployment.yaml
+          kubectl apply -f k8s-deployment.yaml
           kubectl rollout restart deployment/gym-app-deployment
           kubectl rollout status deployment/gym-app-deployment

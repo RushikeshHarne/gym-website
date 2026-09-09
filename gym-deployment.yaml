@@ -43,11 +43,11 @@ kind: Service
 metadata:
   name: gym-app-service
 spec:
-  type: NodePort
+  type: LoadBalancer
   selector:
     app: gym-app
   ports:
     - protocol: TCP
       port: 80
       targetPort: 3000
-      nodePort: 30080
+      

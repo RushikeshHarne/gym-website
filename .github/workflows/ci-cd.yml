@@ -45,3 +45,34 @@ jobs:
         run: |
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/ironforge-gym:${{ github.sha }}
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/ironforge-gym:latest
+  deploy-to-k8s:
+    needs: build-and-scan
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Set Kubernetes Context
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
+      - name: Create or Update Supabase Secret in K8s
+        run: |
+          kubectl create secret generic supabase-secrets \
+            --from-literal=NEXT_PUBLIC_SUPABASE_URL="${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" \
+            --from-literal=NEXT_PUBLIC_SUPABASE_ANON_KEY="${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy to Kubernetes Cluster
+        run: |
+          kubectl apply -f gym-deployment.yaml
+          kubectl rollout restart deployment/gym-app-deployment
+          kubectl rollout status deployment/gym-app-deployment

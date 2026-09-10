@@ -86,8 +86,8 @@ export default function Home() {
           </p>
 
           <h1 className="text-4xl font-black uppercase tracking-tight text-white sm:text-6xl md:text-7xl">
-            Build Your <br />
-            <span className="text-orange-500">Strongest Self</span>
+            Build Body <br />
+            <span className="text-orange-500">Strongest Muscle</span>
           </h1>
 
           <p className="mx-auto mt-6 max-w-2xl text-base text-gray-400 md:text-lg">

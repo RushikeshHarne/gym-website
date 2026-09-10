@@ -80,6 +80,6 @@ jobs:
 
       - name: Deploy to EKS Cluster
         run: |
-          kubectl apply -f k8s-gym-deployment.yaml
+          kubectl apply -f gym-deployment.yaml
           kubectl rollout restart deployment/gym-app-deployment
           kubectl rollout status deployment/gym-app-deployment

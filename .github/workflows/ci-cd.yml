@@ -72,6 +72,7 @@ jobs:
 
       - name: Create or Update Supabase Secret in K8s
         run: |
+          kubectl delete secret supabase-secrets --ignore-not-found=true
           kubectl create secret generic supabase-secrets \
             --from-literal=NEXT_PUBLIC_SUPABASE_URL="${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" \
             --from-literal=NEXT_PUBLIC_SUPABASE_ANON_KEY="${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" \

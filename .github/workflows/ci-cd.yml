@@ -68,7 +68,7 @@ jobs:
 
       - name: Update Kubeconfig for EKS
         run: |
-          aws eks update-kubeconfig --name gym-eks-cluster --region us-east-1
+          aws eks update-kubeconfig --name gym-eks-cluster-1 --region ap-south-1
 
       - name: Create or Update Supabase Secret in K8s
         run: |
